@@ -19,6 +19,16 @@ import type { Actuality } from "../kernel";
 
 // ─── Replay V2 ────────────────────────────────────────────
 
+export interface ReplayInput {
+  claim_id: string;
+  contract_root: string;
+  actuality: Actuality;
+  evidence_root: string;
+  evidence: any[];
+  spec_id: string;
+  spec_version: number;
+}
+
 export interface ReplayV2Result {
   valid: boolean;
   mode: "CRYPTO" | "SEMANTIC" | "FULL";
@@ -50,15 +60,7 @@ export interface ReplayV2Result {
 
 export function replayReceiptV2(
   receipt: AgentReceipt,
-  qpExtension: {
-    claim_id: string;
-    contract_root: string;
-    actuality: Actuality;
-    evidence_root: string;
-    evidence: any[];
-    spec_id: string;
-    spec_version: number;
-  },
+  qpExtension: ReplayInput,
   registry: QPRegistry,
   mode: "CRYPTO" | "SEMANTIC" | "FULL" = "FULL",
   trustedPublicKey?: string,

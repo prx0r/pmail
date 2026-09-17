@@ -5,4 +5,4 @@ export type { QPRegistry } from "./registry";
 export { createProgramBundle } from "./registry";
 export type { ProgramBundle, JudgeProgram, GateProgram, TransitionProgram, RegisteredProofSpec, JudgeResult, GateResult } from "./types";
 export { replayReceiptV2 } from "./replay-v2";
-export type { ReplayV2Result } from "./replay-v2";
+export type { ReplayV2Result, ReplayInput } from "./replay-v2";

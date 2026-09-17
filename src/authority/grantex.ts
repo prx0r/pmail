@@ -61,6 +61,7 @@ export class LocalAuthority implements AuthorityProvider {
   private privateKeyPem: string;
   private publicKeyPemValue: string;
   private keyId: string;
+  private activeGrants = new Map<string, StoredGrant>();
 
   constructor() {
     const kp = generateKeyPairSync("ed25519");
@@ -104,7 +105,7 @@ export class LocalAuthority implements AuthorityProvider {
     const privateKey = createPrivateKey({ key: this.privateKeyPem, format: "pem", type: "pkcs8" });
     const sig = sign(null, Buffer.from(canonicalJson(grantBody)), privateKey);
 
-    return {
+    const grant: StoredGrant = {
       id: "grant:" + sha256(canonicalJson(grantBody)).slice(0, 16),
       issuer: params.issuer,
       subject: params.subject,
@@ -119,6 +120,11 @@ export class LocalAuthority implements AuthorityProvider {
       signature: sig.toString("base64"),
       revoked: false,
     };
+
+    // Track for consumeGrant
+    this.activeGrants.set(grant.id, grant);
+
+    return grant;
   }
 
   async validateGrant(grant: StoredGrant, expected: {
@@ -173,7 +179,11 @@ export class LocalAuthority implements AuthorityProvider {
 
   async consumeGrant(grantId: string): Promise<boolean> {
     // In production: atomic DB transaction
-    // For dev: in-memory (not thread-safe)
+    // For dev: track in-memory
+    const grant = this.activeGrants.get(grantId);
+    if (!grant) return false;
+    if (grant.uses >= grant.max_uses) return false;
+    grant.uses++;
     return true;
   }
 

@@ -48,16 +48,19 @@ export class MoneroPayClient {
 
   /** Generic RPC call */
   private async rpcCall(method: string, params: Record<string, any>): Promise<any> {
-    const auth = this.config.username
-      ? { username: this.config.username, password: this.config.password || "" }
-      : undefined;
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+
+    if (this.config.username) {
+      headers["Authorization"] = "Basic " + Buffer.from(
+        `${this.config.username}:${this.config.password || ""}`
+      ).toString("base64");
+    }
 
     const response = await fetch(this.config.url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ jsonrpc: "2.0", id: "0", method, params }),
       signal: AbortSignal.timeout(30_000),
-      ...(auth ? { headers: { ...{}, "Authorization": "Basic " + Buffer.from(`${auth.username}:${auth.password}`).toString("base64") } } : {}),
     });
 
     if (!response.ok) throw new Error(`Wallet RPC error: ${response.status}`);

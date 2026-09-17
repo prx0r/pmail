@@ -9,7 +9,9 @@ function sha256(data: string): string {
 }
 
 // ─── Session Lifecycle ────────────────────────────────────
-// UNFUNDED → FUNDED → ACTIVE → EXHAUSTED/REVOKED
+// UNFUNDED → ACTIVE → EXHAUSTED/REVOKED
+// fundSession transitions UNFUNDED → ACTIVE directly.
+// No intermediate FUNDED state exists in the state machine.
 
 export interface Capability {
   id: string;                    // "cap:" + sha256
@@ -90,6 +92,8 @@ export function useCapability(
   if (capability.amount_atomic < requiredAmount) {
     return { allowed: false, reason: `insufficient credits: ${capability.amount_atomic} < ${requiredAmount}` };
   }
+  // Mark as used — prevents double-spend
+  capability.used = true;
   return { allowed: true };
 }
 

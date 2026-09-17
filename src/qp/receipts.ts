@@ -189,7 +189,7 @@ export function qpExtensionFromReceipt(
 // ─── Utilities ────────────────────────────────────────────
 
 function computeEnvelopeHash(envelope: Omit<ReceiptEnvelope, "receipt_hash" | "signature" | "signer_key">): string {
-  return sha256(JSON.stringify(canonicalEnvelope(envelope)));
+  return sha256(canonicalEnvelopeBytes(envelope as ReceiptEnvelope));
 }
 
 function canonicalEnvelope(envelope: any): Record<string, any> {
@@ -199,7 +199,8 @@ function canonicalEnvelope(envelope: any): Record<string, any> {
 
 function canonicalEnvelopeBytes(envelope: ReceiptEnvelope): string {
   const { signature, signer_key, receipt_hash, ...rest } = envelope;
-  return JSON.stringify(rest);
+  // Use JCS-style deterministic serialization (sorted keys)
+  return JSON.stringify(rest, Object.keys(rest).sort());
 }
 
 function sha256(data: string): string {
