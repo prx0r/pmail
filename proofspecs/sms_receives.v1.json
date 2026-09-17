@@ -1,0 +1,24 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "sms_receives",
+  "version": 1,
+  "description": "SMS received on exact phone number with nonce",
+  "claim_schema_hash": "sha256:sms_receives_schema",
+  "evidence_schema_hash": "sha256:sms_observation_schema",
+  "actuality_dag": ["phone_active", "sms_observed"],
+  "judges": [
+    { "id": "phone_active", "program_hash": "sha256:judgePhoneActive", "runtime_hash": "node:20", "config_hash": "sha256:default", "dependencies_hash": "sha256:none", "bundle_hash": "" },
+    { "id": "sms_observed", "program_hash": "sha256:judgeSmsObserved", "runtime_hash": "node:20", "config_hash": "sha256:default", "dependencies_hash": "sha256:none", "bundle_hash": "" }
+  ],
+  "gates": [{ "id": "all_judges_pass", "program_hash": "sha256:all_judges_pass", "required": true }],
+  "freshness": { "sms_observation": 600 },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:independent_sender_required",
+  "transition_program_hash": "sha256:sms_settle",
+  "proof_requirement": "TRUE",
+  "rules": {
+    "TRUE": "fresh SMS nonce observed on exact number within timeout",
+    "FALSE": "decisive negative (carrier bounce, number disconnected)",
+    "UNKNOWN": "timeout, provider unavailable, in-memory map not durable"
+  }
+}

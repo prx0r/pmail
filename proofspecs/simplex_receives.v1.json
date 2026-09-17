@@ -1,0 +1,27 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "simplex_receives",
+  "version": 1,
+  "description": "SimpleX message received with exact nonce commitment",
+  "claim_schema_hash": "sha256:simplex_receives_schema",
+  "evidence_schema_hash": "sha256:simplex_observation_schema",
+  "actuality_dag": ["address_active", "message_observed"],
+  "judges": [
+    { "id": "address_active", "program_hash": "sha256:judgeAddressActive", "runtime_hash": "node:20", "config_hash": "sha256:default", "dependencies_hash": "sha256:none", "bundle_hash": "" },
+    { "id": "message_observed", "program_hash": "sha256:judgeMessageObserved", "runtime_hash": "node:20", "config_hash": "sha256:default", "dependencies_hash": "sha256:none", "bundle_hash": "" }
+  ],
+  "gates": [
+    { "id": "all_judges_pass", "program_hash": "sha256:all_judges_pass", "required": true }
+  ],
+  "freshness": { "simplex_observation": 3600 },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:independent_sender_required",
+  "transition_program_hash": "sha256:simplex_settle",
+  "proof_requirement": "TRUE",
+  "rules": {
+    "TRUE": "fresh SimpleX nonce observed in exact mailbox within timeout",
+    "FALSE": "decisive negative (authenticated terminal bounce)",
+    "UNKNOWN": "timeout, provider unavailable, probe failure",
+    "critical": ["nonce must be cryptographically random", "exact mailbox queried, never global search"]
+  }
+}

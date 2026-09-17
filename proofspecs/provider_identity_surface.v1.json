@@ -1,0 +1,23 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "provider_identity_surface",
+  "version": 1,
+  "description": "Provider identity surface documentation — what the provider requires",
+  "claim_schema_hash": "sha256:provider_surface_schema",
+  "evidence_schema_hash": "sha256:provider_surface_evidence",
+  "actuality_dag": ["provider_documented"],
+  "judges": [
+    { "id": "provider_documented", "program_hash": "sha256:judgeProviderDocumented", "runtime_hash": "node:20", "config_hash": "sha256:default", "dependencies_hash": "sha256:none", "bundle_hash": "" }
+  ],
+  "gates": [{ "id": "all_judges_pass", "program_hash": "sha256:all_judges_pass", "required": true }],
+  "freshness": { "provider_observation": 2592000 },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:independent_observation",
+  "transition_program_hash": "sha256:provider_settle",
+  "proof_requirement": "TRUE",
+  "rules": {
+    "TRUE": "provider identity surface documented with dated evidence",
+    "FALSE": "provider contradicts documented surface",
+    "UNKNOWN": "provider docs stale or unavailable"
+  }
+}

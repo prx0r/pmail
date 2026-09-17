@@ -1,0 +1,51 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "xmr_payment_received",
+  "version": 1,
+  "description": "XMR payment received and confirmed for exact invoice",
+  "claim_schema_hash": "sha256:xmr_payment_received_schema",
+  "evidence_schema_hash": "sha256:xmr_observation_schema",
+  "actuality_dag": ["invoice_observed", "confirmations_adequate"],
+  "judges": [
+    {
+      "id": "invoice_observed",
+      "program_hash": "sha256:judgeInvoiceObserved",
+      "runtime_hash": "node:20",
+      "config_hash": "sha256:default",
+      "dependencies_hash": "sha256:none",
+      "bundle_hash": ""
+    },
+    {
+      "id": "confirmations_adequate",
+      "program_hash": "sha256:judgeConfirmationsAdequate",
+      "runtime_hash": "node:20",
+      "config_hash": "sha256:default",
+      "dependencies_hash": "sha256:none",
+      "bundle_hash": ""
+    }
+  ],
+  "gates": [
+    { "id": "all_judges_pass", "program_hash": "sha256:all_judges_pass", "required": true },
+    { "id": "evidence_fresh", "program_hash": "sha256:evidence_fresh", "required": true }
+  ],
+  "freshness": {
+    "xmr_observation": 3600,
+    "xmr_confirmation": 86400
+  },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:xmr_readback_required",
+  "transition_program_hash": "sha256:xmr_settle",
+  "proof_requirement": "TRUE_AND_AUTHORITY",
+  "rules": {
+    "TRUE": "exact invoice observed AND sufficient confirmations AND amount matches",
+    "FALSE": "wrong invoice OR wrong amount OR confirmed non-payment",
+    "UNKNOWN": "timeout, node unavailable, partial confirmation, ambiguous state",
+    "critical": [
+      "duplicate callback cannot double-credit",
+      "partial payment does not become paid",
+      "wrong invoice cannot fund another session",
+      "overpayment must have deterministic handling",
+      "provider response alone is not proof"
+    ]
+  }
+}
