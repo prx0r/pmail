@@ -82,7 +82,7 @@ export interface VerificationResult {
 
 export class LocalAttestor implements RuntimeAttestor {
   id = "local";
-  name = "Local Attestor (Development)";
+  name = "Local Attestor (DEV_ONLY — not for production)";
 
   async available(): Promise<boolean> {
     return true;
@@ -99,7 +99,7 @@ export class LocalAttestor implements RuntimeAttestor {
       nonce: params.nonce,
     };
 
-    // In production: hardware-signed. For local: content hash of claims.
+    // DEV_ONLY: content hash, not hardware-signed
     const attestation_blob = sha256(JSON.stringify(claims));
 
     return {
@@ -107,7 +107,7 @@ export class LocalAttestor implements RuntimeAttestor {
       timestamp,
       claims,
       attestation_blob,
-      algorithm: "sha256-local",
+      algorithm: "sha256-local-dev-only",
     };
   }
 
@@ -136,15 +136,17 @@ export class LocalAttestor implements RuntimeAttestor {
     const age = Date.now() - new Date(attestation.timestamp).getTime();
     const freshnessOk = age < 5 * 60 * 1000;
 
+    // DEV_ONLY: always fail production policy checks
+    // A real TEE attestor would verify workload/runtime/policy hashes against hardware root
     return {
-      valid: signatureOk && freshnessOk,
-      reason: !signatureOk ? "Signature mismatch" : !freshnessOk ? "Attestation stale" : undefined,
+      valid: false, // DEV_ONLY: local attestor never produces production-valid attestation
+      reason: "DEV_ONLY: LocalAttestor cannot satisfy production attestation policy. Use DStack or equivalent.",
       checked: {
         signature: signatureOk,
         freshness: freshnessOk,
-        workload_match: true, // local attestor doesn't enforce specific workload
-        qp_verifier_match: true,
-        privacy_policy_match: true,
+        workload_match: false, // DEV_ONLY: not verified
+        qp_verifier_match: false, // DEV_ONLY: not verified
+        privacy_policy_match: false, // DEV_ONLY: not verified
       },
       observed_at: new Date().toISOString(),
     };

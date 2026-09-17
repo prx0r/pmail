@@ -1,5 +1,6 @@
 // src/core/tor.ts — Tor onion service configuration
 // Phase E: Expose PMail API through an onion service.
+// STATUS: DEV_ONLY — no real Tor process. Returns UNCONFIGURED.
 
 /**
  * Tor is the canonical ANON_CORE network endpoint.
@@ -34,67 +35,68 @@ export interface TorConfig {
   clearnetEnabled: boolean;
 }
 
+export type TorState = "UNCONFIGURED" | "STARTING" | "READY" | "FAILED";
+
 export interface OnionServiceInfo {
-  hostname: string;            // e.g. "abc123...xyz.onion"
+  state: TorState;
+  hostname?: string;            // only set when state === "READY"
   port: number;
   createdAt: string;
-  privacyClass: PrivacyClass;
-  localEndpoint: string;       // e.g. "127.0.0.1:8080"
+  privacyClass?: PrivacyClass;  // only set when state === "READY"
+  localEndpoint: string;
+  error?: string;
 }
 
 // ─── Tor Service Manager ─────────────────────────────────
 
 export class TorService {
   private config: TorConfig;
-  private service?: OnionServiceInfo;
+  private service: OnionServiceInfo;
 
   constructor(config: TorConfig) {
     this.config = config;
+    this.service = {
+      state: "UNCONFIGURED",
+      port: config.localPort,
+      createdAt: new Date().toISOString(),
+      localEndpoint: `127.0.0.1:${config.localPort}`,
+    };
   }
 
   /**
    * Start the Tor onion service.
-   * In production: launches tor process with hidden service config.
-   * For MVP: reads pre-generated hostname or creates config.
+   * DEV_ONLY: returns UNCONFIGURED. Real implementation launches tor process.
    */
   async start(): Promise<OnionServiceInfo> {
-    // In production:
+    // DEV_ONLY: In production:
     // 1. Generate or load HS keys
     // 2. Write torrc with HiddenServiceDir + HiddenServicePort
     // 3. Launch tor process
     // 4. Read hostname from HiddenServiceDir/hostname
     // 5. Verify service is reachable via 127.0.0.1:localPort
-
-    // For now, return a placeholder structure
-    const hostname = this.config.hostnameFile
-      ? "placeholder.onion"
-      : "generate-on-first-run.onion";
-
     this.service = {
-      hostname,
+      state: "UNCONFIGURED",
       port: this.config.localPort,
       createdAt: new Date().toISOString(),
-      privacyClass: "ANON_CORE",
       localEndpoint: `127.0.0.1:${this.config.localPort}`,
+      error: "DEV_ONLY: Tor not implemented. Run Commit 9 for real onion service.",
     };
-
     return this.service;
   }
 
   /** Stop the Tor service */
   async stop(): Promise<void> {
-    // In production: send SIGTERM to tor process, wait for clean shutdown
-    this.service = undefined;
+    this.service = { state: "UNCONFIGURED", port: this.config.localPort, createdAt: this.service.createdAt, localEndpoint: this.service.localEndpoint };
   }
 
   /** Get current service info */
-  getInfo(): OnionServiceInfo | undefined {
+  getInfo(): OnionServiceInfo {
     return this.service;
   }
 
   /**
    * Verify the onion service is reachable.
-   * Returns QP-ready evidence for onion_service_reachable claim.
+   * DEV_ONLY: always returns unreachable. Never produces TRUE QP claim.
    */
   async verifyReachability(): Promise<{
     reachable: boolean;
@@ -103,36 +105,12 @@ export class TorService {
     latencyMs?: number;
     error?: string;
   }> {
-    if (!this.service) {
-      return {
-        reachable: false,
-        hostname: "",
-        observedAt: new Date().toISOString(),
-        error: "Service not started",
-      };
-    }
-
-    const start = Date.now();
-    try {
-      // In production: HTTP request through Tor SOCKS proxy
-      // await fetch(`http://${this.service.hostname}`, {
-      //   agent: new SocksProxyAgent("socks5://127.0.0.1:9050"),
-      // });
-      const latencyMs = Date.now() - start;
-      return {
-        reachable: true,
-        hostname: this.service.hostname,
-        observedAt: new Date().toISOString(),
-        latencyMs,
-      };
-    } catch (err: any) {
-      return {
-        reachable: false,
-        hostname: this.service.hostname,
-        observedAt: new Date().toISOString(),
-        error: err.message,
-      };
-    }
+    return {
+      reachable: false,
+      hostname: "",
+      observedAt: new Date().toISOString(),
+      error: "DEV_ONLY: Tor not implemented. Onion service reachability cannot be verified.",
+    };
   }
 }
 

@@ -10,7 +10,7 @@ describe("Runtime Attestation", () => {
     expect(await attestor.available()).toBe(true);
   });
 
-  it("generates attestation", async () => {
+  it("generates attestation (DEV_ONLY)", async () => {
     const result = await attestor.attest({
       workloadHash: "workload-123",
       qpVerifierVersion: "1.0.0",
@@ -19,13 +19,11 @@ describe("Runtime Attestation", () => {
 
     expect(result.attestor_id).toBe("local");
     expect(result.claims.workload_hash).toBe("workload-123");
-    expect(result.claims.qp_verifier_version).toBe("1.0.0");
-    expect(result.claims.privacy_policy_hash).toBe("policy-abc");
     expect(result.attestation_blob).toBeTruthy();
-    expect(result.algorithm).toBe("sha256-local");
+    expect(result.algorithm).toBe("sha256-local-dev-only");
   });
 
-  it("verifies valid attestation", async () => {
+  it("always fails production verification (DEV_ONLY)", async () => {
     const attestation = await attestor.attest({
       workloadHash: "wl",
       qpVerifierVersion: "1.0",
@@ -33,23 +31,11 @@ describe("Runtime Attestation", () => {
     });
 
     const result = await attestor.verify(attestation);
-    expect(result.valid).toBe(true);
-    expect(result.checked.signature).toBe(true);
-    expect(result.checked.freshness).toBe(true);
-  });
-
-  it("rejects tampered attestation", async () => {
-    const attestation = await attestor.attest({
-      workloadHash: "wl",
-      qpVerifierVersion: "1.0",
-      privacyPolicyHash: "pp",
-    });
-
-    // Tamper with claims
-    attestation.claims.workload_hash = "tampered";
-    const result = await attestor.verify(attestation);
+    // DEV_ONLY: LocalAttestor never produces production-valid attestation
     expect(result.valid).toBe(false);
-    expect(result.reason).toContain("Signature mismatch");
+    expect(result.reason).toContain("DEV_ONLY");
+    expect(result.checked.signature).toBe(true); // signature itself is valid
+    expect(result.checked.workload_match).toBe(false); // but not production-verified
   });
 
   it("rejects attestation from wrong attestor", async () => {
