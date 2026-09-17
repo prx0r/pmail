@@ -1,5 +1,7 @@
 // src/identity/types.ts — Identity model (operator, agent, person)
 
+import { createHash, generateKeyPairSync } from "crypto";
+
 /**
  * Identity model for PMail:
  * - Person: deliberately absent from ANON_CORE
@@ -42,29 +44,28 @@ export interface Session {
 }
 
 export function createOperator(): Operator {
-  // In production: generate Ed25519 keypair
-  // For now: random ID
-  const id = "op:" + sha256(String(Date.now()) + String(Math.random()));
+  const { publicKey } = generateKeyPairSync("ed25519");
+  const pub = publicKey.export({ type: "spki", format: "pem" }) as string;
+  const id = "op:" + sha256(pub).slice(0, 16);
   return {
     id,
-    publicKey: "", // would be Ed25519 public key
+    publicKey: pub,
     createdAt: new Date().toISOString(),
     capabilities: [],
     revoked: false,
   };
 }
 
-export function createSession(agentId: string, operatorId?: string): Session {
+export function createAgent(operatorId: string, attestation?: Attestation): Agent {
+  const randomSuffix = sha256(String(Date.now()) + String(Math.random())).slice(0, 12);
   return {
-    id: "sess:" + sha256(String(Date.now()) + String(Math.random())),
+    id: "agent:" + randomSuffix,
     operatorId,
-    agentId,
-    state: "UNFUNDED",
+    attestation,
     createdAt: new Date().toISOString(),
-    credits: 0n,
   };
 }
 
-function sha256(data: string): string {
+export function sha256(data: string): string {
   return createHash("sha256").update(data).digest("hex");
 }

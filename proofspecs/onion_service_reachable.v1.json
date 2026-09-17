@@ -1,0 +1,41 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "onion_service_reachable",
+  "version": 1,
+  "description": "Proves a PMail onion service is reachable from the Tor network",
+  "claim_schema_hash": "sha256:onion_reachable_claim_v1",
+  "evidence_schema_hash": "sha256:onion_reachable_evidence_v1",
+  "actuality_dag": ["onion_service_observed"],
+  "judges": [
+    {
+      "id": "judge_onion_reachable",
+      "program_hash": "sha256:onion_reachable_judge_v1",
+      "description": "TRUE if evidence shows successful HTTP response from the .onion address via Tor proxy"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    },
+    {
+      "id": "evidence_fresh",
+      "required": true,
+      "description": "Evidence must be within freshness window"
+    }
+  ],
+  "freshness": {
+    "onion_probe": 3600
+  },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:onion_reachable_transition_v1",
+  "proof_requirement": "TRUE",
+  "critical_rules": [
+    "Must be tested via Tor SOCKS proxy, not local loopback",
+    "The exact .onion hostname must match the claim subject",
+    "Timeout or connection refused => UNKNOWN, not FALSE",
+    "DNS resolution failure => UNKNOWN (onion addresses have no DNS)"
+  ]
+}

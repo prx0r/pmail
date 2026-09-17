@@ -1,0 +1,41 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "sms_sends",
+  "version": 1,
+  "description": "Proves an outbound SMS was sent from a provisioned number to an exact destination",
+  "claim_schema_hash": "sha256:sms_sends_claim_v1",
+  "evidence_schema_hash": "sha256:sms_sends_evidence_v1",
+  "actuality_dag": ["sms_outbound_observed"],
+  "judges": [
+    {
+      "id": "judge_sms_send_observed",
+      "program_hash": "sha256:sms_send_judge_v1",
+      "description": "TRUE if evidence contains sms_outbound class with number_commitment, destination_commitment, nonce, and sent_at"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    },
+    {
+      "id": "evidence_fresh",
+      "required": true,
+      "description": "Evidence must be within freshness window"
+    }
+  ],
+  "freshness": {
+    "sms_outbound": 600
+  },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:sms_send_transition_v1",
+  "proof_requirement": "TRUE",
+  "critical_rules": [
+    "Provider's send acknowledgement is evidence, not proof",
+    "Independent readback from recipient is required for TRUE",
+    "If send succeeds but recipient readback unavailable => UNKNOWN",
+    "The exact sender number and destination must match the claim"
+  ]
+}

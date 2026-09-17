@@ -1,0 +1,41 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "capability_minted",
+  "version": 1,
+  "description": "Proves a capability was minted exactly once from a confirmed payment",
+  "claim_schema_hash": "sha256:cap_minted_claim_v1",
+  "evidence_schema_hash": "sha256:cap_minted_evidence_v1",
+  "actuality_dag": ["payment_confirmed", "capability_created"],
+  "judges": [
+    {
+      "id": "judge_payment_confirmed",
+      "program_hash": "sha256:payment_confirm_judge_v1",
+      "description": "TRUE if xmr_payment_received receipt exists with Actuality=TRUE"
+    },
+    {
+      "id": "judge_capability_idempotent",
+      "program_hash": "sha256:idempotency_judge_v1",
+      "description": "TRUE if this invoice has not already minted a capability (no double-credit)"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    }
+  ],
+  "freshness": {},
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:capability_mint_transition_v1",
+  "proof_requirement": "TRUE_AND_AUTHORITY",
+  "critical_rules": [
+    "Each invoice can mint its entitlement exactly once",
+    "Duplicate callback must not double-credit",
+    "Partial payment does not become paid",
+    "Wrong invoice cannot fund another session",
+    "Overpayment must be handled deterministically (credit exact amount, not overage)",
+    "Authority grant is required to mint (prevents unauthorized capability creation)"
+  ]
+}

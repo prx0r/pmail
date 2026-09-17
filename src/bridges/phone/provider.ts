@@ -21,6 +21,8 @@ export interface PhoneCapabilities {
   voice_out: boolean | "UNKNOWN";
   data: boolean | "UNKNOWN";
   renewable: boolean | "UNKNOWN";
+  expires_at?: string;
+  number_type?: "mobile" | "voip" | "unknown";
 }
 
 export interface PhoneQuery {
@@ -100,16 +102,20 @@ export interface BridgeSelectionQuery {
   country?: string;
 }
 
-export function selectBridge(
+export async function selectBridge(
   providers: PhoneBridgeProvider[],
   query: BridgeSelectionQuery
-): PhoneBridgeProvider[] {
-  // Filter by privacy class (must be within bounds)
+): Promise<PhoneBridgeProvider[]> {
   const classOrder = { "ANON_CORE": 0, "PSEUDONYMOUS_BRIDGE": 1, "IDENTITY_BRIDGED": 2 };
   const maxClass = classOrder[query.maxPrivacyClass];
 
-  return providers.filter((p) => {
-    const pClass = classifyProvider(p.describeIdentitySurface as any);
-    return classOrder[pClass] <= maxClass;
-  });
+  const results: PhoneBridgeProvider[] = [];
+  for (const p of providers) {
+    const surface = await p.describeIdentitySurface();
+    const pClass = classifyProvider(surface);
+    if (classOrder[pClass] <= maxClass) {
+      results.push(p);
+    }
+  }
+  return results;
 }

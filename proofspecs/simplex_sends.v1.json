@@ -1,0 +1,41 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "simplex_sends",
+  "version": 1,
+  "description": "Proves a SimpleX message was successfully sent to an exact address",
+  "claim_schema_hash": "sha256:simplex_sends_claim_v1",
+  "evidence_schema_hash": "sha256:simplex_sends_evidence_v1",
+  "actuality_dag": ["simplex_send_observed"],
+  "judges": [
+    {
+      "id": "judge_simplex_send_observed",
+      "program_hash": "sha256:simplex_send_judge_v1",
+      "description": "TRUE if evidence contains simplex_send class with valid message_id, to address, body_hash, and sent_at timestamp"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    },
+    {
+      "id": "evidence_fresh",
+      "required": true,
+      "description": "Evidence must be within freshness window"
+    }
+  ],
+  "freshness": {
+    "simplex_send": 600
+  },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:simplex_send_transition_v1",
+  "proof_requirement": "TRUE",
+  "critical_rules": [
+    "The adapter's send acknowledgement is evidence only, not proof",
+    "Independent readback of message delivery status is required for TRUE",
+    "If send succeeds but readback is unavailable, actuality is UNKNOWN",
+    "The exact destination address must match the claim subject"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "pmail_identity_not_collected",
+  "version": 1,
+  "description": "Proves PMail did not collect conventional identity during an operation",
+  "claim_schema_hash": "sha256:no_identity_claim_v1",
+  "evidence_schema_hash": "sha256:no_identity_evidence_v1",
+  "actuality_dag": ["identity_surface_documented", "no_forbidden_fields_observed"],
+  "judges": [
+    {
+      "id": "judge_identity_surface_clean",
+      "program_hash": "sha256:identity_surface_judge_v1",
+      "description": "TRUE if all dependency identity surfaces have legal_identity_required=false, account_required=false"
+    },
+    {
+      "id": "judge_no_forbidden_bridges",
+      "program_hash": "sha256:no_forbidden_judge_v1",
+      "description": "TRUE if no IDENTITY_BRIDGED providers are in the operation dependency chain"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    },
+    {
+      "id": "privacy_class_check",
+      "required": true,
+      "description": "Operation privacy class must be ANON_CORE"
+    }
+  ],
+  "freshness": {},
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:no_identity_transition_v1",
+  "proof_requirement": "TRUE",
+  "critical_rules": [
+    "This claim is about PMail's own data collection, not provider behavior",
+    "A provider may collect identity externally; that degrades the provider's classification",
+    "But PMail itself must not require, store, or transmit conventional identity in ANON_CORE mode",
+    "Marketing 'no KYC' claims are metadata, not proof of actual field collection",
+    "Evidence must show the actual fields requested during the operation path"
+  ]
+}

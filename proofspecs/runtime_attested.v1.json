@@ -1,0 +1,43 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "runtime_attested",
+  "version": 1,
+  "description": "Proves the PMail runtime is running in an attested TEE environment",
+  "claim_schema_hash": "sha256:runtime_attested_claim_v1",
+  "evidence_schema_hash": "sha256:runtime_attested_evidence_v1",
+  "actuality_dag": ["attestation_verified"],
+  "judges": [
+    {
+      "id": "judge_attestation_valid",
+      "program_hash": "sha256:attestation_judge_v1",
+      "description": "TRUE if hardware-signed attestation blob matches claimed workload, QP verifier, and privacy policy hashes"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    },
+    {
+      "id": "evidence_fresh",
+      "required": true,
+      "description": "Attestation must be recent (within 5 minutes)"
+    }
+  ],
+  "freshness": {
+    "tee_attestation": 300
+  },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:attested_transition_v1",
+  "proof_requirement": "TRUE",
+  "critical_rules": [
+    "TEE attestation proves execution isolation, NOT network anonymity",
+    "An attested runtime can still leak metadata via network",
+    "Attestation blob must be verified against hardware root of trust",
+    "Stale attestation (>5 min) => UNKNOWN",
+    "Wrong workload hash => FALSE",
+    "Non-TEE environment => this claim cannot be satisfied"
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "voice_receives",
+  "version": 1,
+  "description": "Proves a provisioned number can receive inbound voice calls",
+  "claim_schema_hash": "sha256:voice_in_claim_v1",
+  "evidence_schema_hash": "sha256:voice_in_evidence_v1",
+  "actuality_dag": ["voice_inbound_observed"],
+  "judges": [
+    {
+      "id": "judge_voice_inbound_observed",
+      "program_hash": "sha256:voice_in_judge_v1",
+      "description": "TRUE if evidence shows an inbound call that rang/terminated on the exact number"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    },
+    {
+      "id": "evidence_fresh",
+      "required": true,
+      "description": "Evidence must be within freshness window"
+    }
+  ],
+  "freshness": {
+    "voice_probe": 3600
+  },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:voice_in_transition_v1",
+  "proof_requirement": "TRUE",
+  "critical_rules": [
+    "Provider's voice_in capability claim is not proof",
+    "Must be tested by independent caller placing actual call",
+    "Ring detected or call terminated on the number => TRUE",
+    "No ring, no termination, timeout => UNKNOWN",
+    "Busy signal or rejection => FALSE (capability denied)"
+  ]
+}

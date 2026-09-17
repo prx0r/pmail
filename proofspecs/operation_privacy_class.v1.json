@@ -1,0 +1,40 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "operation_privacy_class",
+  "version": 1,
+  "description": "Proves an operation's privacy classification is correct given its dependency surface",
+  "claim_schema_hash": "sha256:op_privacy_claim_v1",
+  "evidence_schema_hash": "sha256:op_privacy_evidence_v1",
+  "actuality_dag": ["privacy_class_evaluated"],
+  "judges": [
+    {
+      "id": "judge_privacy_class_consistent",
+      "program_hash": "sha256:privacy_class_judge_v1",
+      "description": "TRUE if the declared privacy class matches the evaluated class from identity surfaces"
+    },
+    {
+      "id": "judge_no_forbidden_bridges",
+      "program_hash": "sha256:forbidden_bridges_judge_v1",
+      "description": "TRUE if no forbidden identity dependencies exist in the operation path"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    }
+  ],
+  "freshness": {},
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:op_privacy_transition_v1",
+  "proof_requirement": "TRUE",
+  "critical_rules": [
+    "Privacy class can only degrade, never improve, by adding dependencies",
+    "ANON_CORE + ANON_CORE => ANON_CORE",
+    "ANON_CORE + PSEUDONYMOUS_BRIDGE => PSEUDONYMOUS_BRIDGE",
+    "anything + IDENTITY_BRIDGED => IDENTITY_BRIDGED",
+    "A policy violation means the operation must not proceed"
+  ]
+}

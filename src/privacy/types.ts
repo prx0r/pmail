@@ -81,16 +81,11 @@ export function evaluatePrivacy(
     currentClass = composePrivacy(currentClass, surfaceClass);
   }
 
-  const allowed = currentClass === policy.max_privacy_class ||
-    (currentClass === "ANON_CORE" && policy.max_privacy_class !== "ANON_CORE") ||
-    (currentClass === "PSEUDONYMOUS_BRIDGE" && policy.max_privacy_class === "IDENTITY_BRIDGED");
-
-  // Actually: allowed if current class is within policy bounds
   const classOrder = { "ANON_CORE": 0, "PSEUDONYMOUS_BRIDGE": 1, "IDENTITY_BRIDGED": 2 };
-  const allowedStrict = classOrder[currentClass] <= classOrder[policy.max_privacy_class];
+  const allowed = classOrder[currentClass] <= classOrder[policy.max_privacy_class];
 
   return {
-    allowed: allowedStrict && violations.length === 0,
+    allowed: allowed && violations.length === 0,
     class: currentClass,
     violations,
   };

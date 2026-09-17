@@ -1,0 +1,42 @@
+{
+  "protocol": "qp/1",
+  "spec_id": "voice_sends",
+  "version": 1,
+  "description": "Proves a provisioned number can place outbound voice calls",
+  "claim_schema_hash": "sha256:voice_out_claim_v1",
+  "evidence_schema_hash": "sha256:voice_out_evidence_v1",
+  "actuality_dag": ["voice_outbound_observed"],
+  "judges": [
+    {
+      "id": "judge_voice_outbound_observed",
+      "program_hash": "sha256:voice_out_judge_v1",
+      "description": "TRUE if evidence shows outbound call placed from the exact number and received by independent receiver"
+    }
+  ],
+  "gates": [
+    {
+      "id": "all_judges_pass",
+      "required": true,
+      "description": "All judges must return TRUE"
+    },
+    {
+      "id": "evidence_fresh",
+      "required": true,
+      "description": "Evidence must be within freshness window"
+    }
+  ],
+  "freshness": {
+    "voice_probe": 3600
+  },
+  "provenance_policy_hash": "sha256:standard",
+  "independence_policy_hash": "sha256:standard",
+  "transition_program_hash": "sha256:voice_out_transition_v1",
+  "proof_requirement": "TRUE",
+  "critical_rules": [
+    "Provider's voice_out capability claim is not proof",
+    "Must be tested by placing call to independent receiver",
+    "Receiver confirms call arrived from the exact number => TRUE",
+    "Call failed, no confirmation => UNKNOWN",
+    "Provider rejects outbound calling => FALSE"
+  ]
+}
