@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm run typecheck
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npm test
+
+  lint-honesty:
+    name: No placeholder claims in production code
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check no unconditional TRUE from stubs
+        run: |
+          # Tor must not return reachable=true without network
+          ! grep -rn "reachable: true" src/core/tor.ts
+          # LocalAttestor must not claim production validity
+          ! grep -rn "valid: true" src/core/attestor.ts
+          # No placeholder.onion in QP-facing outputs
+          ! grep -rn "placeholder\.onion" src/ --include="*.ts" | grep -v "DEV_ONLY"
+          # No fake sha256:label hashes in production code
+          ! grep -rn '"sha256:judge' src/ --include="*.ts"
+          ! grep -rn '"sha256:pad' src/ --include="*.ts"
+      - name: Check all advertised tools are dispatchable
+        run: |
+          # Every tool in PMAIL_TOOLS must have a case in handleTool switch
+          node -e "
+            const fs = require('fs');
+            const src = fs.readFileSync('src/mcp/server.ts', 'utf8');
+            const toolNames = [...src.matchAll(/name: \"(pmail\.[a-z.]+)\"/g)].map(m => m[1]);
+            const dispatch = fs.readFileSync('src/mcp/server.ts', 'utf8');
+            let ok = true;
+            for (const t of toolNames) {
+              if (!dispatch.includes('case \"' + t + '\"') && !dispatch.includes(\"'\" + t + \"'\")) {
+                console.log('MISSING dispatch for: ' + t);
+                ok = false;
+              }
+            }
+            if (ok) console.log('All ' + toolNames.length + ' tools have dispatch paths');
+            else process.exit(1);
+          "
